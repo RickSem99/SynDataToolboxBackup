@@ -1,0 +1,18 @@
+Begin Object Class=/Script/Engine.PhysicsAsset Name="DroneBody_PhAT"
+   Begin Object Class=/Script/UnrealEd.SceneThumbnailInfo Name="SceneThumbnailInfo_0"
+   End Object
+   Begin Object Class=/Script/Engine.SkeletalBodySetup Name="SkeletalBodySetup_16"
+   End Object
+   Begin Object Name="SceneThumbnailInfo_0"
+   End Object
+   Begin Object Name="SkeletalBodySetup_16"
+      AggGeom=(BoxElems=((Center=(X=3.834717,Y=3.661865,Z=0.000000),X=7.500000,Y=29.000000,Z=8.500000,Name="Body",bContributeToMass=False),(Center=(X=2.000000,Y=0.000000,Z=0.000000),X=1.500000,Y=25.000000,Z=25.000000,Name="Arms"),(Center=(X=2.670000,Y=7.032958,Z=6.033327),Rotation=(Pitch=0.000000,Yaw=-0.000002,Roll=-45.002712),X=7.500000,Y=15.000000,Z=2.000000,Name="FRLeg",bContributeToMass=False),(Center=(X=2.670000,Y=-6.699494,Z=-6.367081),Rotation=(Pitch=0.000000,Yaw=-0.000002,Roll=-42.195908),X=7.500000,Y=15.000000,Z=2.000000,Name="BLLeg",bContributeToMass=False),(Center=(X=2.670000,Y=-6.632939,Z=6.366438),Rotation=(Pitch=0.000000,Yaw=-0.000001,Roll=-137.813354),X=7.500000,Y=15.000000,Z=2.000000,Name="BRLeg",bContributeToMass=False),(Center=(X=2.670000,Y=6.900422,Z=-6.366650),Rotation=(Pitch=0.000000,Yaw=-0.000001,Roll=-137.813354),X=7.500000,Y=15.000000,Z=2.000000,Name="FLLeg",bContributeToMass=False)))
+      DefaultInstance=(bNotifyRigidBodyCollision=True,MassInKgOverride=1.000000,LinearDamping=0.500000,AngularDamping=0.100000,bOverrideMass=True)
+      BoneName="body"
+      CollisionTraceFlag=CTF_UseSimpleAsComplex
+   End Object
+   PreviewSkeletalMesh="/IsarPlugin/PhysQuad/Meshes/SK_DroneBody.SK_DroneBody"
+   BoundsBodies(0)=0
+   SkeletalBodySetups(0)=SkeletalBodySetup'"SkeletalBodySetup_16"'
+   ThumbnailInfo=SceneThumbnailInfo'"SceneThumbnailInfo_0"'
+End Object
