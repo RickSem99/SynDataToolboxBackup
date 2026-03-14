@@ -1,0 +1,17 @@
+# --- Cartelle da NON caricare ---
+CameraScreenshots/
+venv/
+.idea/
+
+# --- Unreal Engine ---
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+Build/
+*.sln
+*.pdb
+
+# --- Altri file inutili ---
+.gitignore.txt
+recorded_path.json
