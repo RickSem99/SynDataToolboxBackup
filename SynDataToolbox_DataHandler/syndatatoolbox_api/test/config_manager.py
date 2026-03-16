@@ -2,11 +2,17 @@
 config_manager.py
 Gestisce l'input dell'utente e la configurazione dei parametri di acquisizione
 VERSIONE SMART: Adatta le domande in base alla modalità (Griglia o Traiettoria).
+Supporta anche il caricamento da file .ini (acquisition_config.ini).
 """
 
 import sys
+import os
+import configparser
 from typing import List, Tuple, Dict
 import numpy as np
+
+# Percorso default del file di configurazione (stessa cartella di config_manager.py)
+DEFAULT_CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "acquisition_config.ini")
 
 
 class ColorPresets:
@@ -79,12 +85,133 @@ class ConfigManager:
     def __init__(self):
         self.config = {}
 
-    def get_user_input(self, trajectory_mode: bool = False) -> Dict:
+    # ==========================================================================
+    # CARICAMENTO DA FILE .INI
+    # ==========================================================================
+
+    def load_from_file(self, filepath: str, trajectory_mode: bool = False) -> Dict:
         """
-        Acquisisce tutti i parametri dall'utente.
-        Args:
-            trajectory_mode: Se True, salta le domande su griglia e rotazioni camera.
+        Carica la configurazione da un file .ini.
+        Ritorna il dict config popolato, oppure lancia un'eccezione se il file non è valido.
         """
+        parser = configparser.ConfigParser()
+        # Aggiunge una sezione fittizia [DEFAULT] per poter usare configparser senza sezioni
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = '[DEFAULT]\n' + f.read()
+        parser.read_string(content)
+        cfg = parser['DEFAULT']
+
+        print(f"\n📄 Configurazione caricata da: {filepath}\n")
+
+        # -- num_cubes --
+        self.config['num_cubes'] = int(cfg.get('num_cubes', '125'))
+
+        # -- intensità --
+        intensity_min  = float(cfg.get('intensity_min',  '1000.0'))
+        intensity_max  = float(cfg.get('intensity_max',  '15000.0'))
+        intensity_step = float(cfg.get('intensity_step', '2000.0'))
+        self.config['intensity_range'] = (intensity_min, intensity_max)
+        self.config['intensity_step']  = intensity_step
+        self.config['intensities']     = self._generate_range(intensity_min, intensity_max, intensity_step)
+
+        # -- colori --
+        colors_raw = cfg.get('colors', '1')
+        color_indices = [int(x.strip()) for x in colors_raw.split(',') if x.strip()]
+        self.config['colors'] = [ColorPresets.COLORS[i] for i in color_indices]
+
+        # -- raggio --
+        radius_min  = float(cfg.get('radius_min',  '300.0'))
+        radius_max  = float(cfg.get('radius_max',  '300.0'))
+        radius_step = float(cfg.get('radius_step', '300.0'))
+        self.config['radius_range'] = (radius_min, radius_max)
+        self.config['radius_step']  = radius_step
+        self.config['radiuses']     = self._generate_range(radius_min, radius_max, radius_step)
+
+        # -- inner/outer cone --
+        self.config['inner_cone_angles'] = self._parse_cone_value(cfg.get('inner_cone', '20.0'))
+        self.config['outer_cone_angles'] = self._parse_cone_value(cfg.get('outer_cone', '40.0'))
+
+        # -- direzione spotlight --
+        direction_choice = cfg.get('spotlight_direction', 'a').strip().lower()
+        if direction_choice == 'f':
+            self.config['spotlight_pitch'] = float(cfg.get('spotlight_pitch', '0.0'))
+            self.config['spotlight_yaw']   = float(cfg.get('spotlight_yaw',   '0.0'))
+        else:
+            preset = SpotLightDirectionPresets.PRESETS.get(direction_choice,
+                         SpotLightDirectionPresets.PRESETS['a'])
+            self.config['spotlight_pitch'] = preset['pitch']
+            self.config['spotlight_yaw']   = preset['yaw']
+
+        # -- rotazioni camera (solo grid mode) --
+        if not trajectory_mode:
+            rotation_mode = cfg.get('camera_rotation_mode', 'preset').strip().lower()
+            if rotation_mode == 'lookat':
+                self.config['pitches']     = []
+                self.config['yaws']        = []
+                self.config['pitches_rad'] = []
+                self.config['yaws_rad']    = []
+                self.config['lookat_poi']  = True
+            else:
+                rotation_keys_raw = cfg.get('rotation_presets', 'b')
+                rotation_keys = [x.strip().lower() for x in rotation_keys_raw.split(',') if x.strip()]
+                pitches_set, yaws_set = set(), set()
+                for key in rotation_keys:
+                    preset = RotationPresets.PRESETS.get(key)
+                    if preset:
+                        pitches_set.update(preset['pitches'])
+                        yaws_set.update(preset['yaws'])
+                self.config['pitches']     = sorted(list(pitches_set))
+                self.config['yaws']        = sorted(list(yaws_set))
+                self.config['pitches_rad'] = list(np.radians(self.config['pitches']))
+                self.config['yaws_rad']    = list(np.radians(self.config['yaws']))
+                self.config['lookat_poi']  = False
+        else:
+            self.config['pitches']     = [0.0]
+            self.config['yaws']        = [0.0]
+            self.config['pitches_rad'] = [0.0]
+            self.config['yaws_rad']    = [0.0]
+            self.config['lookat_poi']  = False
+
+        self._print_summary(trajectory_mode)
+        return self.config
+
+    def _parse_cone_value(self, raw: str) -> List[float]:
+        """
+        Parsa il valore di un cone angle dal file ini.
+        - Valore singolo  '20.0'         → [20.0]
+        - Intervallo      '5.0,20.0,5.0' → [5.0, 10.0, 15.0, 20.0]
+        """
+        parts = [p.strip() for p in raw.split(',') if p.strip()]
+        if len(parts) == 1:
+            return [float(parts[0])]
+        elif len(parts) == 3:
+            return self._generate_range(float(parts[0]), float(parts[1]), float(parts[2]))
+        else:
+            return [float(parts[0])]
+
+    def get_user_input(self, trajectory_mode: bool = False,
+                       config_file: str = None) -> Dict:
+        """
+        Acquisisce i parametri.
+        - Se config_file è specificato (o acquisition_config.ini esiste nella
+          stessa cartella), carica da file saltando tutti i prompt interattivi.
+        - Altrimenti chiede i valori uno ad uno come prima.
+        """
+        # Determina il file da usare
+        if config_file is None:
+            config_file = DEFAULT_CONFIG_FILE
+
+        if os.path.exists(config_file):
+            print(f"\n📄 Trovato file di configurazione: {os.path.basename(config_file)}")
+            use_file = input("  Usare il file? (s/n) [s]: ").strip().lower()
+            if use_file in ('', 's', 'y', 'yes', 'si'):
+                try:
+                    return self.load_from_file(config_file, trajectory_mode)
+                except Exception as e:
+                    print(f"  ⚠️  Errore nel file di configurazione: {e}")
+                    print("  -> Procedo con input manuale.\n")
+
+        # --- INPUT MANUALE (come prima) ---
         print("\n" + "=" * 70)
         print("🎬 CONFIGURAZIONE PARAMETRI ACQUISIZIONE")
         if trajectory_mode:
