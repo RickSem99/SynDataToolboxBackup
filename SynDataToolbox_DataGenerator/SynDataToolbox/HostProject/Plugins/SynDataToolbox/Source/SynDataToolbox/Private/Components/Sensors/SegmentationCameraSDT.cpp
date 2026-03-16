@@ -90,7 +90,7 @@ const bool ASegmentationCameraSDT::InitSensor()
 	Camera->ShowFlags.SetFog(false);
 	Camera->ShowFlags.SetPostProcessing(false);
 	Camera->ShowFlags.SetAtmosphere(false); //flat world!
-	RenderTarget->InitCustomFormat(Width, Height, EPixelFormat::PF_B8G8R8A8, false);
+	RenderTarget->InitCustomFormat(Width, Height, EPixelFormat::PF_B8G8R8A8, /*bForceLinearGamma=*/ false);
 	//EPixelFormat::PF_FloatRGBA
 	LastObservation = new uint8[GetObservationSize()]; //set up dimension
 	return true;

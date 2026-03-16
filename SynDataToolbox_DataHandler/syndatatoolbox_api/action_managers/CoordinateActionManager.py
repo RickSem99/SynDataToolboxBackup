@@ -37,15 +37,18 @@ class CoordinateActionManager(ActionManager):
 		command = f'ACTION_{self.__name}_'
 		action_op = list(operation_obj.keys())[0]
 		value_op = list(operation_obj.values())[0]
-		if type(value_op) is not list:
-			print("Error, value of given operation must be a list of 6 integer")
+		if not isinstance(value_op, list):
+			print("Error, value of given operation must be a list")
 			return ""
 		try:
 			self.__action_set.index(action_op)
 			if value_op is not None:
 				command += action_op
-				for v in range(len(value_op)):
-					command += ";{:.8f}".format(value_op[v])
+				for v in value_op:
+					try:
+						command += ";{:.8f}".format(float(v))
+					except Exception:
+						command += f";{v}"
 				command += "_"
 		except ValueError:
 			print(f"ERROR: COMMAND {action_op} FOR {self.__name} IS NOT DEFINED!")

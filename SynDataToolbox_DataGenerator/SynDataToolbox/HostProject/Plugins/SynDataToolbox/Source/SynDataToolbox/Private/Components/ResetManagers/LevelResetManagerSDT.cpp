@@ -1,5 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "Components/ResetManagers/LevelResetManagerSDT.h"
+#include <limits>
 
 //There are some MAGIC NUMBERS to remove. In fact i can do something like "cruise control"
 
@@ -38,7 +39,7 @@ void ALevelResetManagerSDT::BeginPlay()
 	*/
 	//INIT Arrays XMAX, XMIN YMAX,YMIN AND Z
 	for (FString name : FloorNames) {
-		ZFloors.Add(name, NAN);
+		ZFloors.Add(name, std::numeric_limits<float>::quiet_NaN());
 	}
 
 	if (!CheckInitSettings() && GEngine) {
@@ -65,7 +66,7 @@ bool ALevelResetManagerSDT::CheckInitSettings()
 				if (ReturnValue)
 				{
 					float ZFloor = *ReturnValue;
-					if (isnan(ZFloor))
+					if (FMath::IsNaN(ZFloor))
 					{
 						//found at least one floor for specific class name
 						ZFloors.Add(ClassFloor, ActorItr->GetActorLocation().Z);

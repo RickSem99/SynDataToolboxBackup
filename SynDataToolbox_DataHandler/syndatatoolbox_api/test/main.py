@@ -84,7 +84,17 @@ def record_trajectory_live(host, port, output_file, manual_trigger=False):
 
             try:
                 s.sendall("ACPOS".ljust(10).encode('utf-8'))
-                data = s.recv(4096).decode('utf-8', errors='ignore').strip()
+                raw = s.recv(4096)
+                if raw and len(raw) >= 4:
+                    try:
+                        import struct
+                        length = struct.unpack('<I', raw[:4])[0]
+                        payload = raw[4:4+length]
+                        data = payload.decode('utf-8', errors='ignore').strip()
+                    except Exception:
+                        data = raw.decode('utf-8', errors='ignore').strip()
+                else:
+                    data = raw.decode('utf-8', errors='ignore').strip()
                 clean_data = data.replace('\x00', '').replace('ERROR', '').strip()
 
                 if "," in clean_data:

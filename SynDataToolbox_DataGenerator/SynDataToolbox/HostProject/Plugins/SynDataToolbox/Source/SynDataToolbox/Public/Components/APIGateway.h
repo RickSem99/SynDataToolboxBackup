@@ -6,6 +6,7 @@
 #include "Socket/UnrealSocketSDT.h"
 #include "Components/Sensors/SensorSDT.h"
 #include "Components/ActionManagers/ActionManagerSDT.h"
+#include "Components/ActionManagers/ExclusionZoneSDT.h"
 #include "Components/ResetManagers/ResetManagerSDT.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
@@ -19,8 +20,8 @@ UCLASS()
 class SYNDATATOOLBOX_API AAPIGateway : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	AAPIGateway();
 
@@ -43,6 +44,10 @@ public:
 	static const int SETRESETMAN = 10;
 	static const int RESET = 11;
 	static const int FPS = 12;
+	static const int POI = 13; // ID per punto di interesse
+	static const int EXCLUSIONS = 14; // ID per Zone di Esclusione
+	static const int ACPOS = 15; // ID per Action Current Position (Posizione corrente ActionManager)
+
 	bool ShowFPS = false;
 	int FPSCounter = 0;
 
@@ -55,6 +60,7 @@ public:
 	TArray<ISensorSDT*> SensorsList;
 	TArray<IActionManagerSDT*> ActionManagersList;
 	TArray<IResetManagerSDT*> ResetManagersList;
+	TArray<AExclusionZoneSDT*> ExclusionZonesList;
 
 	UGameViewportClient* gameViewport;
 	UStaticMeshComponent* Mesh;
@@ -62,16 +68,16 @@ public:
 	APlayerController* PlayerController;
 
 	int currentActionManagerIndex = -1;
-	
+
 	//if true, dev can choose which actionmanager use and move it around level
 	UPROPERTY(EditAnywhere, Category = "PluginProperty")
-		bool DebugActionManager = true;
+	bool DebugActionManager = true;
 
 	UPROPERTY(EditAnywhere, Category = "PluginProperty")
-		int port = 9734;
+	int32 port = 9734;
 
 	UPROPERTY(EditAnywhere, Category = "PluginProperty")
-		uint32 showRender = 0;
+	uint32 showRender = 0;
 
 protected:
 	// Called when the game starts or when spawned
@@ -93,5 +99,15 @@ protected:
 	const bool PerformAction(TArray<FString>& FieldArray);
 	const bool PerformReset(TArray<FString>& FieldArray);
 	const int CommandToID(const FString& command) const;
+	const FVector FindTargetPointLocation() const;
+	const bool SendPoICoordinates(); // METODO PER L'INVIO DELLE COORDINATE DEL PUNTO DI INTERESSE
+	const bool GetExclusionZones(); // METODO PER IL RECUPERO DELLE ZONE DI ESCLUSIONE
+	const bool SendExclusionZonesList();
+	const bool SendCurrentActionManagerPosition(); // METODO PER INVIARE POSIZIONE CORRENTE (ACPOS)
+
+public:
+	// Dichiarazione della funzione Blueprint per configurare la luce.
+	UFUNCTION(BlueprintImplementableEvent, Category = "SDT API")
+	void SetLightConfigBlueprint(const FString& LightName, float Radius, float Intensity, const FLinearColor& Color);
 
 };

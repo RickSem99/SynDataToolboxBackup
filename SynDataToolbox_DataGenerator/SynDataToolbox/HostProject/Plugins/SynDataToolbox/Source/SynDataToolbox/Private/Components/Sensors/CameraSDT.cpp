@@ -88,9 +88,9 @@ const bool ACameraSDT::InitSensor()
 	Camera->bCaptureEveryFrame = false;
 	Camera->bCaptureOnMovement = false;
 	Camera->FOVAngle = FOV;
+	// Use BGRA8 (default on Windows) and avoid GPU shared typeless resources to prevent D3D12 format mismatch
 	RenderTarget->InitCustomFormat(Width, Height, EPixelFormat::PF_B8G8R8A8, false);
-	//RenderTarget->RenderTargetFormat = ETextureRenderTargetFormat::RTF_Floa;
-	RenderTarget->bGPUSharedFlag = true;
+	//RenderTarget->bGPUSharedFlag = true; // Not needed for CPU ReadPixels and may cause DXGI format mismatch
 	//EPixelFormat::PF_B8G8R8A8
 	//RenderTarget->AutoExposureSpeed = 100;
 	//RenderTarget->AutoExposureBias = 0;
@@ -110,24 +110,24 @@ const bool ACameraSDT::InitSensor()
 
 	// Abilita e imposta i parametri di Local Exposure
 	Camera->PostProcessSettings.bOverride_LocalExposureHighlightContrastScale = 1;
-	Camera->PostProcessSettings.LocalExposureHighlightContrastScale = 0.6f;  // Regola secondo necessità
+	Camera->PostProcessSettings.LocalExposureHighlightContrastScale = 0.6f;  // Regola secondo necessitï¿½
 
 	// Abilita e imposta i parametri per il contrasto delle ombre
 	Camera->PostProcessSettings.bOverride_LocalExposureShadowContrastScale = 1;
-	Camera->PostProcessSettings.LocalExposureShadowContrastScale = 0.76f;  // Regola il valore secondo le tue necessità
+	Camera->PostProcessSettings.LocalExposureShadowContrastScale = 0.76f;  // Regola il valore secondo le tue necessitï¿½
 	*/
 
 	//Camera->PostProcessSettings.bOverride_LocalExposureDetailStrength = 1;
-	//Camera->PostProcessSettings.LocalExposureDetailStrength = 1.0f;  // Regola secondo necessità
+	//Camera->PostProcessSettings.LocalExposureDetailStrength = 1.0f;  // Regola secondo necessitï¿½
 
 	//Camera->PostProcessSettings.bOverride_LocalExposureStrength = 1;
-	//Camera->PostProcessSettings.LocalExposureStrength = 1.0f;  // Regola secondo necessità
+	//Camera->PostProcessSettings.LocalExposureStrength = 1.0f;  // Regola secondo necessitï¿½
 
 	//Camera->PostProcessSettings.bOverride_LocalExposureMidtonesMin = 1;
-	//Camera->PostProcessSettings.LocalExposureMidtonesMin = 0.3f;  // Regola secondo necessità
+	//Camera->PostProcessSettings.LocalExposureMidtonesMin = 0.3f;  // Regola secondo necessitï¿½
 
 	//Camera->PostProcessSettings.bOverride_LocalExposureMidtonesMax = 1;
-	//Camera->PostProcessSettings.LocalExposureMidtonesMax = 0.6f;  // Regola secondo necessità
+	//Camera->PostProcessSettings.LocalExposureMidtonesMax = 0.6f;  // Regola secondo necessitï¿½
 
 	if (ActorsToHide.Num() != 0) {
 		Camera->HiddenActors = ActorsToHide;
@@ -141,7 +141,7 @@ const bool ACameraSDT::InitSensor()
 		// PostProcessVolume->BlendRadius = 500.0f;  // radious of influence when bUnbound = false
 		// Auto Explosure Configuration
 		PostProcessVolume->Settings.bOverride_AutoExposureBias = true;
-		PostProcessVolume->Settings.AutoExposureBias = 1.0f; // Aumenta questo valore per rendere la scena più luminosa
+		PostProcessVolume->Settings.AutoExposureBias = 1.0f; // Aumenta questo valore per rendere la scena piï¿½ luminosa
 		PostProcessVolume->Settings.bOverride_AutoExposureMinBrightness = true; 
 		PostProcessVolume->Settings.AutoExposureMinBrightness = 1.0f; 
 		PostProcessVolume->Settings.bOverride_AutoExposureMaxBrightness = true; 

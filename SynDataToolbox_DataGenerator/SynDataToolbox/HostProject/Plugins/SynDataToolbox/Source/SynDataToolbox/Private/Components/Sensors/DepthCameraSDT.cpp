@@ -86,8 +86,8 @@ const bool ADepthCameraSDT::InitSensor()
     Camera->bCaptureEveryFrame = false;
     Camera->bCaptureOnMovement = false;
     Camera->FOVAngle = FOV;
-    RenderTarget->InitCustomFormat(Width, Height, EPixelFormat::PF_FloatRGBA, true);
-    RenderTarget->bGPUSharedFlag = true;
+    RenderTarget->InitCustomFormat(Width, Height, EPixelFormat::PF_FloatRGBA, /*bForceLinearGamma=*/ true);
+    //RenderTarget->bGPUSharedFlag = true; // disable GPU shared to avoid D3D12 typeless format issues
     RenderTarget->UpdateResourceImmediate();
     LastObservation = new uint8[GetObservationSize()];
     Camera->TextureTarget = RenderTarget;   // Set the render target for the camera

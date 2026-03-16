@@ -60,7 +60,7 @@ void UAckermannPhysicsManagerSDT::SetNewPosition(TArray<float> Velocities, float
 {
 	OldPosition = AgentToManage->GetActorLocation();  // old center position
 	OldRotation = AgentToManage->GetActorRotation();  // old center rotation
-	UE_LOG(LogTemp, Warning, TEXT("OldRotation: %f"), OldRotation);
+	UE_LOG(LogTemp, Warning, TEXT("OldRotation: %s"), *OldRotation.ToString());
 	UE_LOG(LogTemp, Warning, TEXT("AgentLength: %f"), AgentLength);
 
 	if (IsRotAngle != 0.0)
