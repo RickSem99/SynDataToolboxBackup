@@ -84,10 +84,11 @@ const bool ACameraSDT::InitSensor()
 		UE_LOG(LogTemp, Error, TEXT("Invalid Settings."))
 		return false;
 	}
-	Camera->CaptureSource = SCS_FinalColorLDR;
+	Camera->CaptureSource = ESceneCaptureSource::SCS_FinalToneCurveHDR;
 	Camera->bCaptureEveryFrame = false;
 	Camera->bCaptureOnMovement = false;
 	Camera->FOVAngle = FOV;
+	Camera->PostProcessSettings.AutoExposureMaxBrightness = 1.0f;
 	// Use BGRA8 (default on Windows) and avoid GPU shared typeless resources to prevent D3D12 format mismatch
 	RenderTarget->InitCustomFormat(Width, Height, EPixelFormat::PF_B8G8R8A8, false);
 	//RenderTarget->bGPUSharedFlag = true; // Not needed for CPU ReadPixels and may cause DXGI format mismatch

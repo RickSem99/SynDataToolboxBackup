@@ -84,7 +84,9 @@ const bool ACameraSDT::InitSensor()
 		UE_LOG(LogTemp, Error, TEXT("Invalid Settings."))
 		return false;
 	}
-	Camera->CaptureSource = SCS_FinalColorLDR;
+	// SCS_FinalToneCurveHDR cattura l'immagine con lo stesso pipeline del viewport:
+	// tone mapping + auto exposure adattiva = risultato identico a ciò che si vede nell'editor
+	Camera->CaptureSource = ESceneCaptureSource::SCS_FinalToneCurveHDR;
 	Camera->bCaptureEveryFrame = false;
 	Camera->bCaptureOnMovement = false;
 	Camera->FOVAngle = FOV;
