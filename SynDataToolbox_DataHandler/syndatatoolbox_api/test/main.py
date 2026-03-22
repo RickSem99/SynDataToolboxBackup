@@ -32,6 +32,37 @@ VK_SPACE = 0x20
 
 
 # ==============================================================================
+# DEDUPLICAZIONE TRAIETTORIA
+# ==============================================================================
+def deduplicate_trajectory(trajectory, min_angle_change=0.5, min_distance=1.0):
+    """
+    Rimuove punti troppo simili al precedente per evitare frame duplicati.
+    - min_angle_change: variazione minima in gradi (pitch o yaw) per tenere il punto
+    - min_distance: distanza minima in cm per tenere il punto
+    """
+    if not trajectory:
+        return trajectory
+
+    filtered = [trajectory[0]]
+    for pt in trajectory[1:]:
+        prev = filtered[-1]
+
+        # Variazione posizione
+        dist = sum([(a - b) ** 2 for a, b in zip(pt['loc'], prev['loc'])]) ** 0.5
+
+        # Variazione rotazione
+        d_pitch = abs(pt['rot'][0] - prev['rot'][0])
+        d_yaw   = abs(pt['rot'][1] - prev['rot'][1])
+
+        if dist > min_distance or d_pitch > min_angle_change or d_yaw > min_angle_change:
+            filtered.append(pt)
+
+    removed = len(trajectory) - len(filtered)
+    print(f"📉 Deduplicazione: {len(trajectory)} → {len(filtered)} punti ({removed} rimossi)")
+    return filtered
+
+
+# ==============================================================================
 # FUNZIONE DI REGISTRAZIONE IBRIDA (AUTO o MANUALE)
 # ==============================================================================
 def record_trajectory_live(host, port, output_file, manual_trigger=False):
@@ -280,6 +311,16 @@ def main():
     try:
         success = False
         if ACQUISITION_MODE == "TRAJECTORY":
+            # Deduplica la traiettoria prima dell'acquisizione
+            try:
+                with open(trajectory_file, 'r') as f:
+                    traj_data = json.load(f)
+                traj_data = deduplicate_trajectory(traj_data, min_angle_change=0.5, min_distance=1.0)
+                with open(trajectory_file, 'w') as f:
+                    json.dump(traj_data, f, indent=4)
+            except Exception as e:
+                print(f"⚠️  Deduplicazione saltata: {e}")
+
             success = engine.run_acquisition_trajectory(trajectory_file, delay_between_shots=0.1)
         else:
             bbox_file = os.path.join(BASE_UE_PATH, "VolumeMisure.txt")
