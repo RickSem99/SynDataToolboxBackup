@@ -10,6 +10,7 @@ import os
 import time
 import json
 import socket
+import struct
 import ctypes  # ✅ Libreria per leggere tastiera in background su Windows
 from config_manager import ConfigManager
 from grid_manager import GridManager
@@ -87,7 +88,6 @@ def record_trajectory_live(host, port, output_file, manual_trigger=False):
                 raw = s.recv(4096)
                 if raw and len(raw) >= 4:
                     try:
-                        import struct
                         length = struct.unpack('<I', raw[:4])[0]
                         payload = raw[4:4+length]
                         data = payload.decode('utf-8', errors='ignore').strip()
@@ -214,7 +214,9 @@ def main():
         BASE_UE_PATH = os.getcwd()
 
     UE_PORT = 9734
-    UE_ADDRESS = 'localhost'
+    # Usa variabile d'ambiente UE_HOST se disponibile (utile da WSL2 dove localhost non raggiunge Windows)
+    # Esempio WSL2: export UE_HOST=172.17.192.1
+    UE_ADDRESS = os.environ.get('UE_HOST', 'localhost')
 
     # 2. SCELTA FLUSSO
     print("\n" + "=" * 70)
@@ -276,6 +278,7 @@ def main():
         sys.exit(1)
 
     try:
+        success = False
         if ACQUISITION_MODE == "TRAJECTORY":
             success = engine.run_acquisition_trajectory(trajectory_file, delay_between_shots=0.1)
         else:
@@ -289,6 +292,7 @@ def main():
                 engine.grid_positions = gm.get_positions()
                 engine._calculate_totals()
                 engine.run_acquisition(delay_between_shots=0.1)
+                success = True
 
         if success:
             print("\n✅ CICLO COMPLETATO CON SUCCESSO!")

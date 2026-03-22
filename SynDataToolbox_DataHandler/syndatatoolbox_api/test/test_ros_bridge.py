@@ -24,10 +24,26 @@ Come usarlo
 
 import sys
 import time
+import os
+import argparse
+
+# ── Parsing argomenti ─────────────────────────────────────────────────────
+parser = argparse.ArgumentParser(description='Test ROSBridge — SynDataToolbox ↔ ROS1')
+parser.add_argument('--host', type=str,
+                    default=os.environ.get('UE_HOST', 'localhost'),
+                    help='IP di Unreal Engine (default: localhost, da WSL2 usa 172.17.192.1)')
+parser.add_argument('--port', type=int, default=9734,
+                    help='Porta di Unreal Engine (default: 9734)')
+args = parser.parse_args()
+
+UE_HOST = args.host
+UE_PORT = args.port
 
 # ── Controlla dipendenze ───────────────────────────────────────────────────
 print("=" * 60)
 print("  TEST ROSBridge — SynDataToolbox ↔ ROS1")
+print("=" * 60)
+print(f"  🎯 Target: {UE_HOST}:{UE_PORT}")
 print("=" * 60)
 
 # Test import rospy
@@ -60,7 +76,7 @@ except ImportError:
 print("-" * 60)
 
 # ── Connessione a Unreal Engine ────────────────────────────────────────────
-print("📡 Connessione a Unreal Engine su localhost:9734 ...")
+print(f"📡 Connessione a Unreal Engine su {UE_HOST}:{UE_PORT} ...")
 print("   (Assicurati che UE5 sia in PLAY)")
 print()
 
@@ -80,7 +96,7 @@ setup = {
 }
 
 try:
-    environment = env_module.Environment(port=9734, address='localhost', setup=setup)
+    environment = env_module.Environment(port=UE_PORT, address=UE_HOST, setup=setup)
     print("✅ Connesso a Unreal Engine!")
 except Exception as e:
     print(f"❌ Impossibile connettersi a UE5: {e}")

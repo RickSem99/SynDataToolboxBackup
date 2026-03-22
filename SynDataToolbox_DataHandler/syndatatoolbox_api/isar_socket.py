@@ -30,27 +30,22 @@ class IsarSocket:
 
         check = False
         while not check:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
-                self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.sock.settimeout(TIMEOUT_CONNESIONE)  # Imposta un timeout per il tentativo di connessione
+                self.sock.settimeout(TIMEOUT_CONNESIONE)
                 self.sock.connect(server_address)
-
-                # 🛑 CORREZIONE FONDAMENTALE: Imposta un timeout LUNGO per i dati.
                 self.sock.settimeout(TIMEOUT_DATI)
                 check = True
             except ConnectionRefusedError:
-                # Attesa breve prima di riprovare a connettersi
+                self.sock.close()
                 time.sleep(0.5)
             except socket.timeout:
-                # Gestione del timeout durante il tentativo di connessione
+                self.sock.close()
                 time.sleep(0.5)
             except Exception:
-                # Gestione di altri errori di socket
+                self.sock.close()
                 time.sleep(0.5)
 
-            if check:
-                # Uscita pulita dal loop while
-                break
 
     def send_command(self, command):
         command = command.ljust(self.__MAX_COMMAND_LEN)[:self.__MAX_COMMAND_LEN]
