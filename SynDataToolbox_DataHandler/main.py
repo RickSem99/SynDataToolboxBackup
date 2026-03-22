@@ -17,7 +17,7 @@ if __name__ == "__main__":
         'render': True
     }
 
-    environment = environment.Environment(port=9734, address='172.28.128.1', setup=setup)
+    environment = environment.Environment(port=9734, address='localhost', setup=setup)
 
     # rate = 30  # Hz
     while True:

@@ -1,4 +1,4 @@
-opencv-python
 numpy
-seaborn
+opencv-python
 scipy
+seaborn

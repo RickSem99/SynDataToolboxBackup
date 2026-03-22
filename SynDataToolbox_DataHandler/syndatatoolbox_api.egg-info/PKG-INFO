@@ -1,7 +1,10 @@
-Metadata-Version: 2.1
+Metadata-Version: 1.0
 Name: syndatatoolbox-api
 Version: 0.0.2
-Requires-Dist: opencv-python
-Requires-Dist: numpy
-Requires-Dist: seaborn
-Requires-Dist: scipy
+Summary: UNKNOWN
+Home-page: UNKNOWN
+Author: UNKNOWN
+Author-email: UNKNOWN
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
