@@ -225,12 +225,51 @@ def main():
                 print("⚠️  SETACTIONMAN non confermato — le coordinate potrebbero essere zero.")
                 print("   Verifica che la rebuild includa le modifiche a APIGateway.cpp.")
 
+            # 4) WARMUP: aspetta che la posizione si stabilizzi prima di iniziare a registrare
+            #    Scarta campioni finché non si ottengono 3 letture consecutive coerenti (non a zero
+            #    e con variazione minima), oppure dopo max 5 tentativi procede comunque.
+            print("\n⏳ Warmup: attendo posizione stabile da UE5...")
+            stable_pos = None
+            warmup_attempts = 0
+            WARMUP_MAX = 5
+            WARMUP_STABILITY_CM = 500.0  # soglia: due letture coerenti entro questa distanza
+
+            while warmup_attempts < WARMUP_MAX:
+                data = request_getpos(coord_name)
+                if not data or ',' not in data:
+                    data = request_acpos()
+                if data and ',' in data:
+                    try:
+                        parts = [float(v) for v in data.split(',') if v.strip()]
+                        if len(parts) >= 6 and not all(p == 0.0 for p in parts[:3]):
+                            if stable_pos is None:
+                                stable_pos = parts[:3]
+                            else:
+                                # Controlla se il nuovo campione è vicino al precedente
+                                import math as _math
+                                dist = _math.sqrt(sum((parts[j] - stable_pos[j])**2 for j in range(3)))
+                                if dist < WARMUP_STABILITY_CM:
+                                    print(f"  ✅ Posizione stabile confermata: ({parts[0]:.1f}, {parts[1]:.1f}, {parts[2]:.1f})")
+                                    break  # posizione stabile → inizia registrazione
+                                else:
+                                    print(f"  ⚠️  Campione warmup instabile (dist={dist:.1f} cm), riprovo...")
+                                    stable_pos = parts[:3]
+                    except ValueError:
+                        pass
+                warmup_attempts += 1
+                time.sleep(0.5)
+
+            if warmup_attempts >= WARMUP_MAX:
+                print("  ⚠️  Warmup terminato senza conferma stabile — procedo comunque.")
+
             print(f'\n🔴 REGISTRAZIONE AVVIATA (ogni {SAMPLING_RATE:.1f}s) — CTRL+C per fermare\n')
 
-            # 4) loop di campionamento: usa ACTION GETPOS (non serve SETACTIONMAN)
+            # 5) loop di campionamento: usa ACTION GETPOS (non serve SETACTIONMAN)
             #    con fallback su ACPOS se la rebuild non è ancora disponibile
             zero_warned = False
             old_version_warned = False
+            last_loc = None  # ultima posizione valida registrata
+
             while True:
                 # Prima prova con ACTION GETPOS (funziona senza SETACTIONMAN dopo rebuild)
                 data = request_getpos(coord_name)
@@ -251,12 +290,25 @@ def main():
                                       f"prova a muovere il CoordinateActionManager nella scena.")
                                 zero_warned = True
 
+                            # ── Filtro anti-salto: scarta il punto se è troppo lontano
+                            #    dall'ultimo punto valido registrato (evita artefatti TCP)
+                            curr_loc = [parts[0], parts[1], parts[2]]
+                            if last_loc is not None:
+                                import math as _math
+                                jump = _math.sqrt(sum((curr_loc[j] - last_loc[j])**2 for j in range(3)))
+                                if jump > 1000.0:  # soglia: 10 metri in UE (cm)
+                                    print(f"\n  🚫 Campione scartato — salto anomalo di {jump:.1f} cm  loc={curr_loc}")
+                                    time.sleep(SAMPLING_RATE)
+                                    continue
+                            # ──────────────────────────────────────────────────────────
+
                             elapsed = time.time() - start_time
                             trajectory.append({
                                 "time": round(elapsed, 3),
-                                "loc":  [parts[0], parts[1], parts[2]],
+                                "loc":  curr_loc,
                                 "rot":  [parts[3], parts[4], parts[5]]
                             })
+                            last_loc = curr_loc
                             sys.stdout.write(
                                 f'\r[{elapsed:06.2f}s] '
                                 f'Pos: ({parts[0]:.2f}, {parts[1]:.2f}, {parts[2]:.2f}) | '

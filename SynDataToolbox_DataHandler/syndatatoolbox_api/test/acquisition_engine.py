@@ -10,6 +10,7 @@ import numpy as np
 import time
 import os
 import json
+import math
 import re  # <-- AGGIUNTO
 from datetime import datetime  # <-- AGGIUNTO
 from typing import List, Tuple, Dict, Optional
@@ -381,6 +382,41 @@ class AcquisitionEngine:
 
         return not interrupted
 
+    def _clean_trajectory(self, trajectory: list, jump_threshold_cm: float = 300.0) -> list:
+        """
+        Rimuove i punti con salti anomali (es. artefatti dell'handshake iniziale).
+        Un punto viene scartato se la distanza dal punto precedente supera jump_threshold_cm.
+        Vengono anche rimossi i punti 'ballerini' isolati: se un punto è lontano dal precedente
+        E dal successivo, viene considerato spurio.
+        """
+        if len(trajectory) < 3:
+            return trajectory
+
+        cleaned = [trajectory[0]]
+        skipped = 0
+
+        for i in range(1, len(trajectory) - 1):
+            prev = cleaned[-1]['loc']
+            curr = trajectory[i]['loc']
+            next_ = trajectory[i + 1]['loc']
+
+            dist_prev_curr = math.sqrt(sum((curr[j] - prev[j]) ** 2 for j in range(3)))
+            dist_curr_next = math.sqrt(sum((next_[j] - curr[j]) ** 2 for j in range(3)))
+
+            # Punto spurio: salto enorme sia verso il precedente che verso il successivo
+            if dist_prev_curr > jump_threshold_cm and dist_curr_next > jump_threshold_cm:
+                print(f"  ⚠️  Punto [{i:04d}] SCARTATO — salto da prev={dist_prev_curr:.1f} cm, a next={dist_curr_next:.1f} cm  loc={[round(x,1) for x in curr]}")
+                skipped += 1
+                continue
+
+            cleaned.append(trajectory[i])
+
+        # Aggiungi l'ultimo punto
+        cleaned.append(trajectory[-1])
+
+        print(f"  🧹 Pulizia traiettoria: {len(trajectory)} punti → {len(cleaned)} punti ({skipped} scartati)")
+        return cleaned
+
     def run_acquisition_trajectory(self, trajectory_file: str, delay_between_shots: float = 0.1) -> bool:
         """
         Esegue l'acquisizione basata su TRAIETTORIA REGISTRATA (Modalità Solidale).
@@ -397,8 +433,14 @@ class AcquisitionEngine:
         with open(trajectory_file, 'r') as f:
             trajectory = json.load(f)
 
-        print(f"\n🎬 INIZIO REPLAY TRAIETTORIA ({len(trajectory)} punti)")
-        print(f"   Salvataggio in: {self.output_base_dir}")  # <-- AGGIUNTO
+        print(f"\n🎬 INIZIO REPLAY TRAIETTORIA ({len(trajectory)} punti raw)")
+
+        # ── PULIZIA: rimuove i punti spuri con salti anomali ──────────────────
+        trajectory = self._clean_trajectory(trajectory, jump_threshold_cm=300.0)
+        # ──────────────────────────────────────────────────────────────────────
+
+        print(f"   Punti validi da riprodurre: {len(trajectory)}")
+        print(f"   Salvataggio in: {self.output_base_dir}")
 
         # Disabilita LookAt e Preset per usare esattamente la rotazione registrata
         self.lookat_poi_enabled = False
