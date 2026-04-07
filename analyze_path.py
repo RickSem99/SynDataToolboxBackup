@@ -6,9 +6,11 @@ with open(path_file) as f:
     path = json.load(f)
 
 print(f'Totale punti: {len(path)}')
-print(f'Primo:   loc={path[0]["loc"]}, rot={path[0]["rot"]}')
-print(f'Secondo: loc={path[1]["loc"]}, rot={path[1]["rot"]}')
-print(f'Terzo:   loc={path[2]["loc"]}, rot={path[2]["rot"]}')
+key = 'timestamp' if 'timestamp' in path[0] else 'time'
+print(f'Campo temporale rilevato: "{key}"')
+print(f'Primo:   {key}={path[0][key]}  loc={path[0]["loc"]}, rot={path[0]["rot"]}')
+print(f'Secondo: {key}={path[1][key]}  loc={path[1]["loc"]}, rot={path[1]["rot"]}')
+print(f'Terzo:   {key}={path[2][key]}  loc={path[2]["loc"]}, rot={path[2]["rot"]}')
 print()
 
 distances = []
