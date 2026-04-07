@@ -598,20 +598,6 @@ class AcquisitionEngine:
         # ma la lasciamo per robustezza (anche se non ottimale chiamarla a ogni scatto)
         os.makedirs(output_dir, exist_ok=True)
 
-        color_label = f"R{int(color_rgb[0])}G{int(color_rgb[1])}B{int(color_rgb[2])}"
-
-        filename = (
-            f"shot{self.current_shot:06d}_"
-            f"{color_label}_"
-            f"I{int(intensity)}_"
-            f"Rad{int(radius)}_"
-            f"IC{int(inner_cone):02d}_"
-            f"OC{int(outer_cone):02d}_"
-            f"C{cam_idx:03d}_"
-            f"LFixed_"  # Indicazione esplicita
-            f"S{rot_source}_"
-            f"P{int(pitch_deg):+03d}_"
-            f"Y{int(yaw_deg):+03d}.png"
-        )
+        filename = f"{self.current_shot}.png"
         filepath = os.path.join(output_dir, filename)
         cv2.imwrite(filepath, image)

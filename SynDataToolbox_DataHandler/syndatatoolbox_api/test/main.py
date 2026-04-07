@@ -159,7 +159,7 @@ def record_trajectory_live(host, port, output_file, manual_trigger=False):
                 # Check Tasto 'P' (Save) - Con delay di 0.3s tra pressioni
                 if is_key_pressed(VK_P) and (current_time - last_key_press_time > 0.3):
                     point = {
-                        "time": round(time.time() - start_time, 3),
+                        "timestamp": len(trajectory) + 1,
                         "loc": current_pos,
                         "rot": current_rot
                     }
@@ -188,7 +188,7 @@ def record_trajectory_live(host, port, output_file, manual_trigger=False):
 
                 if is_moving:
                     point = {
-                        "time": round(time.time() - start_time, 3),
+                        "timestamp": len(trajectory) + 1,
                         "loc": current_pos,
                         "rot": current_rot
                     }

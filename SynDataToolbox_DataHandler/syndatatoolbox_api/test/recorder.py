@@ -183,7 +183,8 @@ def main():
             while True:
                 elapsed = time.time() - start_time
                 parts = [x, 0.0, 50.0, 0.0, x * 2, 0.0]
-                trajectory.append({"time": round(elapsed, 3),
+                timestamp = len(trajectory) + 1
+                trajectory.append({"timestamp": timestamp,
                                    "loc": parts[:3], "rot": parts[3:]})
                 sys.stdout.write(
                     f'\r[{elapsed:06.2f}s] Pos: ({parts[0]:.2f}, {parts[1]:.2f}, {parts[2]:.2f}) '
@@ -303,14 +304,16 @@ def main():
                             # ──────────────────────────────────────────────────────────
 
                             elapsed = time.time() - start_time
+                            # timestamp = numero progressivo immagine (1-based)
+                            timestamp = len(trajectory) + 1
                             trajectory.append({
-                                "time": round(elapsed, 3),
+                                "timestamp": timestamp,
                                 "loc":  curr_loc,
                                 "rot":  [parts[3], parts[4], parts[5]]
                             })
                             last_loc = curr_loc
                             sys.stdout.write(
-                                f'\r[{elapsed:06.2f}s] '
+                                f'\r[{elapsed:06.2f}s] img={timestamp} '
                                 f'Pos: ({parts[0]:.2f}, {parts[1]:.2f}, {parts[2]:.2f}) | '
                                 f'Rot: (P={parts[3]:.2f}, Y={parts[4]:.2f}, R={parts[5]:.2f}) | '
                                 f'Punti: {len(trajectory)}'
